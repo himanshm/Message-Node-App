@@ -13,8 +13,6 @@ function MainLayoutPage() {
 
   const [showBackdrop, setShowBackdrop] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  //   const [isAuth, setIsAuth] = useState(true);
-  //   const [error, setError] = useState<Error | null>(null);
 
   const mobileNavHandler = (isOpen: boolean) => {
     setShowMobileNav(isOpen);

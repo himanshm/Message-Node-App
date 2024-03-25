@@ -19,7 +19,6 @@ export interface SignupForm {
   name: FormField;
 }
 
-// Simplified version of fetch API calls for demonstration purposes
 const fetchData = async (
   url: string,
   method: 'POST' | 'PUT',
