@@ -92,7 +92,9 @@ const LoginPage: React.FC<{
           label='Password'
           type='password'
           control='input'
-          onChange={(e) => inputChangeHandler('email', e.currentTarget.value)}
+          onChange={(e) =>
+            inputChangeHandler('password', e.currentTarget.value)
+          }
           onBlur={() => inputBlurHandler('password')}
           value={loginForm.password.value}
           valid={loginForm.password.valid}

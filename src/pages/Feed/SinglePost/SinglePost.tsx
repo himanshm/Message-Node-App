@@ -23,26 +23,27 @@ const SinglePost = () => {
   const { postId } = useParams<{ postId: string }>();
 
   useEffect(() => {
-    // Assuming 'URL' will be replaced with your actual endpoint
-    fetch(`URL/${postId}`)
-      .then((res) => {
+    async function fetchPostData(postId: string | undefined) {
+      try {
+        const res = await fetch(`http:localhost:8080/feed/post/${postId}`);
         if (res.status !== 200) {
           throw new Error('Failed to fetch status');
         }
-        return res.json();
-      })
-      .then((resData) => {
+
+        const resData = await res.json();
         setPostData({
           title: resData.post.title,
           author: resData.post.creator.name,
           date: new Date(resData.post.createdAt).toLocaleDateString('en-US'),
-          image: resData.post.imageUrl, // Assuming 'imageUrl' is the correct field
+          image: `http:localhost:8080/${resData.post.imageUrl}`,
           content: resData.post.content,
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.log(err);
-      });
+      }
+    }
+
+    fetchPostData(postId);
   }, [postId]);
 
   return (

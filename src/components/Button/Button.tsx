@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 
 import './Button.css';
 
-// Define the ButtonProps interface to type-check the component's props
 interface ButtonProps {
   link?: string;
   design?: string;

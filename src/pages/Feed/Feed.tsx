@@ -18,8 +18,6 @@ interface PostData {
   imagePath?: string;
 }
 
-// Assume imports for Post, Button, FeedEdit, Input, Paginator, Loader, ErrorHandler
-
 interface PostData {
   _id: string;
   title: string;
@@ -40,9 +38,8 @@ const Feed: React.FC = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch user status
   const fetchStatus = () => {
-    fetch('URL/status') // Replace 'URL/status' with your actual endpoint
+    fetch('URL/status')
       .then((res) => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch user status.');
@@ -60,7 +57,6 @@ const Feed: React.FC = () => {
       });
   };
 
-  // Function to load posts with useCallback to avoid useEffect dependency warning
   const loadPosts = useCallback(
     (direction?: string) => {
       setPostsLoading(true);
@@ -72,11 +68,7 @@ const Feed: React.FC = () => {
           : postPage;
       setPostPage(page);
 
-      fetch(`URL/posts?page=${page}`, {
-        headers: {
-          Authorization: 'Bearer TOKEN', // Replace 'TOKEN' with your actual token
-        },
-      })
+      fetch(`http://localhost:8080/feed/posts`)
         .then((res) => {
           if (res.status !== 200) {
             throw new Error('Failed to fetch posts.');
@@ -87,7 +79,7 @@ const Feed: React.FC = () => {
           setPosts(
             resData.posts.map((post: PostData) => ({
               ...post,
-              imagePath: post.imagePath || 'default-path.jpg', // Assuming a default image path
+              imagePath: post.imagePath || 'default-path.jpg',
             }))
           );
           setTotalPosts(resData.totalItems);
@@ -133,7 +125,7 @@ const Feed: React.FC = () => {
     setEditPost(undefined);
   };
 
-  const finishEditHandler = (postData: {
+  const finishEditHandler = async (postData: {
     title: string;
     content: string;
     image: File | string;
@@ -146,50 +138,47 @@ const Feed: React.FC = () => {
       formData.append('image', postData.image);
     }
 
-    let url = 'URL/new-post';
+    let url = 'http://localhost:8080/feed/posts';
+    const method = 'POST';
+
     if (editPost) {
       url = `URL/edit-post/${editPost._id}`;
     }
 
-    fetch(url, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        Authorization: 'Bearer TOKEN', // Replace 'TOKEN' with your actual token
-      },
-    })
-      .then((res) => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Creating or editing a post failed!');
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        const updatedPosts = [...posts];
-        if (editPost) {
-          const postIndex = posts.findIndex((p) => p._id === editPost._id);
-          updatedPosts[postIndex] = resData.post;
-        } else {
-          if (posts.length >= 10) {
-            // Assuming 10 posts per page
-            updatedPosts.pop();
-          }
-          updatedPosts.unshift(resData.post);
-        }
-        setPosts(updatedPosts);
-        setIsEditing(false);
-        setEditPost(undefined);
-        setEditLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setIsEditing(false);
-        setEditPost(undefined);
-        setEditLoading(false);
-        setError(
-          err instanceof Error ? err : new Error('Failed to process the post.')
-        );
+    try {
+      const res = await fetch(url, {
+        method: method,
+        body: formData,
       });
+
+      if (res.status !== 200 && res.status !== 201) {
+        throw new Error('Creating or editing a post failed!');
+      }
+      const resData = await res.json();
+
+      const updatedPosts = [...posts];
+      if (editPost) {
+        const postIndex = posts.findIndex((p) => p._id === editPost._id);
+        updatedPosts[postIndex] = resData.post;
+      } else {
+        if (posts.length >= 10) {
+          updatedPosts.pop();
+        }
+        updatedPosts.unshift(resData.post);
+      }
+      setPosts(updatedPosts);
+      setIsEditing(false);
+      setEditPost(undefined);
+      setEditLoading(false);
+    } catch (err) {
+      console.error(err);
+      setIsEditing(false);
+      setEditPost(undefined);
+      setEditLoading(false);
+      setError(
+        err instanceof Error ? err : new Error('Failed to process the post.')
+      );
+    }
   };
 
   const deletePostHandler = (postId: string) => {
@@ -225,7 +214,7 @@ const Feed: React.FC = () => {
   const errorHandler = () => setError(null);
 
   return (
-    <Fragment>
+    <>
       <ErrorHandler error={error} onHandle={errorHandler} />
       <FeedEdit
         editing={isEditing}
@@ -286,7 +275,7 @@ const Feed: React.FC = () => {
           </Paginator>
         )}
       </section>
-    </Fragment>
+    </>
   );
 };
 
