@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import Post from '../../components/Feed/Post/Post';
 import Button from '../../components/Button/Button';
@@ -15,16 +15,7 @@ interface PostData {
   content: string;
   creator: { name: string };
   createdAt: string;
-  imagePath?: string;
-}
-
-interface PostData {
-  _id: string;
-  title: string;
-  content: string;
-  creator: { name: string };
-  createdAt: string;
-  imagePath?: string;
+  imageUrl?: string;
 }
 
 const Feed: React.FC = () => {
@@ -38,58 +29,60 @@ const Feed: React.FC = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchStatus = () => {
-    fetch('URL/status')
-      .then((res) => {
-        if (res.status !== 200) {
-          throw new Error('Failed to fetch user status.');
-        }
-        return res.json();
-      })
-      .then((resData) => {
-        setStatus(resData.status);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError(
-          err instanceof Error ? err : new Error('Failed to fetch status.')
-        );
-      });
+  const fetchStatus = async () => {
+    try {
+      const res = await fetch('URL/status');
+      if (res.status !== 200) {
+        throw new Error('Failed to fetch user status.');
+      }
+      const resData = await res.json();
+      setStatus(resData.status);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch status.')
+      );
+    }
   };
 
   const loadPosts = useCallback(
     (direction?: string) => {
-      setPostsLoading(true);
-      const page =
-        direction === 'next'
-          ? postPage + 1
-          : direction === 'previous'
-          ? postPage - 1
-          : postPage;
-      setPostPage(page);
+      const fetchPosts = async () => {
+        setPostsLoading(true);
+        const page =
+          direction === 'next'
+            ? postPage + 1
+            : direction === 'previous'
+            ? postPage - 1
+            : postPage;
+        setPostPage(page);
 
-      fetch(`http://localhost:8080/feed/posts`)
-        .then((res) => {
+        try {
+          const res = await fetch(
+            `http://localhost:8080/feed/posts?page=${page}`
+          );
           if (res.status !== 200) {
             throw new Error('Failed to fetch posts.');
           }
-          return res.json();
-        })
-        .then((resData) => {
+          const resData = await res.json();
           setPosts(
             resData.posts.map((post: PostData) => ({
               ...post,
-              imagePath: post.imagePath || 'default-path.jpg',
+              imagePath: post.imageUrl || 'default-path.jpg',
             }))
           );
           setTotalPosts(resData.totalItems);
-          setPostsLoading(false);
-        })
-        .catch((err) => {
+        } catch (err) {
           console.log(err);
-          setError(err);
+          setError(
+            err instanceof Error ? err : new Error('Failed to fetch posts.')
+          );
+        } finally {
           setPostsLoading(false);
-        });
+        }
+      };
+
+      fetchPosts();
     },
     [postPage]
   );
@@ -112,7 +105,7 @@ const Feed: React.FC = () => {
       setIsEditing(true);
       setEditPost({
         ...loadedPost,
-        imagePath: loadedPost.imagePath || 'default-image-path.jpg',
+        imageUrl: loadedPost.imageUrl || 'default-image-path.jpg',
       });
     } else {
       setIsEditing(false);
@@ -139,10 +132,11 @@ const Feed: React.FC = () => {
     }
 
     let url = 'http://localhost:8080/feed/posts';
-    const method = 'POST';
+    let method = 'POST';
 
     if (editPost) {
-      url = `URL/edit-post/${editPost._id}`;
+      url = `http://localhost:8080/feed/post/${editPost._id}`;
+      method = 'PUT';
     }
 
     try {
@@ -183,7 +177,7 @@ const Feed: React.FC = () => {
 
   const deletePostHandler = (postId: string) => {
     setPostsLoading(true);
-    fetch(`URL/delete-post/${postId}`, {
+    fetch(`http:localhost:8080/feed/post/${postId}`, {
       method: 'DELETE',
       headers: {
         Authorization: 'Bearer TOKEN', // Replace 'TOKEN' with your actual token

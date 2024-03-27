@@ -22,7 +22,7 @@ export interface SignupForm {
 const fetchData = async (
   url: string,
   method: 'POST' | 'PUT',
-  body: unknown
+  body: SignupForm | AuthData
 ) => {
   const response = await fetch(url, {
     method: method,
@@ -33,6 +33,7 @@ const fetchData = async (
   });
   const data = await response.json();
   if (!response.ok) {
+    const data = await response.json();
     throw new Error(data.message || 'Something went wrong!');
   }
   return data;
@@ -58,20 +59,25 @@ export const useAuth = () => {
     };
 
     try {
-      const resData = await fetchData(url, 'POST', authData);
+      const resData = await fetchData(url, 'PUT', authData);
       console.log(resData);
+      setAuthLoading(false);
+      return true; // Indicate Success
     } catch (err) {
       setError(
         new Error(
           err instanceof Error ? err.message : 'An error occurred during signup'
         )
       );
-    } finally {
       setAuthLoading(false);
+      return false; // Indicate failure
+      // } finally {
+      //   setAuthLoading(false);
+      // }
     }
   };
 
-  const login = async (authData: AuthData, url: string) => {
+  const login = async (url: string, authData: AuthData) => {
     setAuthLoading(true);
     try {
       const resData = await fetchData(url, 'POST', authData);

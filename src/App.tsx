@@ -1,4 +1,6 @@
-import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import { FormEvent, useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+
 import FeedPage from './pages/Feed/Feed';
 import SinglePostPage from './pages/Feed/SinglePost/SinglePost';
 import LoginPage from './pages/Auth/Login';
@@ -8,57 +10,67 @@ import { AuthData } from './hooks/useAuth';
 import { SignupForm } from './hooks/useAuth';
 
 import './App.css';
-import { FormEvent } from 'react';
 import MainLayoutPage from './pages/MainLayout';
-const URL: string = 'http://localhost';
+const BASE_URL: string = 'http://localhost:8080/auth/';
 
 const App: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuth, login, authLoading, signup } = useAuth();
+  const [error, setError] = useState<Error | null>(null);
+
   const loginHandler = (e: FormEvent, authData: AuthData) => {
     e.preventDefault();
-    login(authData, URL);
+    login(`${BASE_URL}login`, authData);
   };
 
-  const signupHandler = (e: FormEvent, formData: SignupForm) => {
+  const signupHandler = async (e: FormEvent, authData: SignupForm) => {
     e.preventDefault();
-    signup(URL, formData);
+    try {
+      const success = await signup(`${BASE_URL}signup`, authData);
+      if (success) {
+        navigate('/login');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Signup failed'));
+    }
   };
+  const clearError = () => setError(null);
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          {!isAuth ? (
-            <>
-              <Route element={<MainLayoutPage />}>
-                <Route
-                  index
-                  element={
-                    <LoginPage onLogin={loginHandler} loading={authLoading} />
-                  }
-                />
-                <Route
-                  path='/signup'
-                  element={
-                    <SignupPage
-                      onSignup={signupHandler}
-                      loading={authLoading}
-                    />
-                  }
-                />
-                <Route path='*' element={<Navigate to='/' replace />} />
-              </Route>
-            </>
-          ) : (
-            <>
-              <Route element={<MainLayoutPage />}>
-                <Route path='/' element={<FeedPage />} />
-                <Route path='/:postId' element={<SinglePostPage />} />
-                <Route path='*' element={<Navigate to='/' replace />} />
-              </Route>
-            </>
-          )}
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        {!isAuth ? (
+          <>
+            <Route element={<MainLayoutPage />}>
+              <Route
+                index
+                element={
+                  <LoginPage onLogin={loginHandler} loading={authLoading} />
+                }
+              />
+              <Route
+                path='/signup'
+                element={
+                  <SignupPage
+                    onSignup={signupHandler}
+                    loading={authLoading}
+                    error={error}
+                    onClearError={clearError}
+                  />
+                }
+              />
+              <Route path='*' element={<Navigate to='/' replace />} />
+            </Route>
+          </>
+        ) : (
+          <>
+            <Route element={<MainLayoutPage />}>
+              <Route path='/' element={<FeedPage />} />
+              <Route path='/:postId' element={<SinglePostPage />} />
+              <Route path='*' element={<Navigate to='/' replace />} />
+            </Route>
+          </>
+        )}
+      </Routes>
     </>
   );
 };

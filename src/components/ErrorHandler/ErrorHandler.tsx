@@ -1,4 +1,3 @@
-import { Fragment, ReactElement } from 'react';
 import Backdrop from '../Backdrop/Backdrop';
 import Modal from '../Modal/Modal';
 
@@ -7,8 +6,8 @@ interface ErrorHandlerProps {
   onHandle: () => void;
 }
 
-const ErrorHandler = ({ error, onHandle }: ErrorHandlerProps): ReactElement => (
-  <Fragment>
+const ErrorHandler = ({ error, onHandle }: ErrorHandlerProps) => (
+  <>
     {error && <Backdrop onClick={onHandle} />}
     {error && (
       <Modal
@@ -20,7 +19,7 @@ const ErrorHandler = ({ error, onHandle }: ErrorHandlerProps): ReactElement => (
         <p>{error.message}</p>
       </Modal>
     )}
-  </Fragment>
+  </>
 );
 
 export default ErrorHandler;

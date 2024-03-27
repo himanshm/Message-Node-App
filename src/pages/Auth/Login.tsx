@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 
 import Input from '../../components/Form/Input/Input';
 import Button from '../../components/Button/Button';
@@ -17,13 +17,15 @@ export interface LoginForm {
   password: FormField;
 }
 
-const LoginPage: React.FC<{
+type LoginPageProps = {
   onLogin: (
     event: FormEvent,
     authData: { email: string; password: string }
   ) => void;
   loading: boolean;
-}> = ({ onLogin, loading }) => {
+};
+
+const LoginPage = ({ onLogin, loading }: LoginPageProps) => {
   const [loginForm, setLoginForm] = useState<LoginForm>({
     email: {
       value: '',
