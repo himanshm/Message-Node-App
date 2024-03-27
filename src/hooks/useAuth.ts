@@ -46,6 +46,8 @@ export const useAuth = () => {
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const getToken = () => localStorage.getItem('token');
+
   const handleError = () => {
     setError(null);
   };
@@ -128,5 +130,14 @@ export const useAuth = () => {
     }
   }, [logout, setAutoLogout]);
 
-  return { isAuth, login, logout, signup, authLoading, error, handleError };
+  return {
+    isAuth,
+    login,
+    logout,
+    signup,
+    authLoading,
+    error,
+    handleError,
+    getToken,
+  };
 };

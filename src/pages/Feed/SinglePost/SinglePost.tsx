@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Image from '../../../components/Image/Image';
 import './SinglePost.css';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface PostData {
   title: string;
@@ -19,13 +20,20 @@ const SinglePost = () => {
     image: '',
     content: '',
   });
+  const { getToken } = useAuth();
+  const token = getToken();
+  console.log(token);
 
   const { postId } = useParams<{ postId: string }>();
 
   useEffect(() => {
     async function fetchPostData(postId: string | undefined) {
       try {
-        const res = await fetch(`http:localhost:8080/feed/post/${postId}`);
+        const res = await fetch(`http:localhost:8080/feed/post/${postId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (res.status !== 200) {
           throw new Error('Failed to fetch status');
         }
@@ -44,7 +52,7 @@ const SinglePost = () => {
     }
 
     fetchPostData(postId);
-  }, [postId]);
+  }, [postId, token]);
 
   return (
     <section className='single-post'>

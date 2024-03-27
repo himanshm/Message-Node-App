@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, FormEvent } from 'react';
 
 import Post from '../../components/Feed/Post/Post';
 import Button from '../../components/Button/Button';
@@ -8,6 +8,7 @@ import Paginator from '../../components/Paginator/Paginator';
 import Loader from '../../components/Loader/Loader';
 import ErrorHandler from '../../components/ErrorHandler/ErrorHandler';
 import './Feed.css';
+import { useAuth } from '../../hooks/useAuth';
 
 interface PostData {
   _id: string;
@@ -28,6 +29,10 @@ const Feed: React.FC = () => {
   const [postsLoading, setPostsLoading] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { getToken } = useAuth();
+
+  const token = getToken();
+  console.log(token);
 
   const fetchStatus = async () => {
     try {
@@ -47,6 +52,8 @@ const Feed: React.FC = () => {
 
   const loadPosts = useCallback(
     (direction?: string) => {
+      if (!token) return;
+
       const fetchPosts = async () => {
         setPostsLoading(true);
         const page =
@@ -59,7 +66,12 @@ const Feed: React.FC = () => {
 
         try {
           const res = await fetch(
-            `http://localhost:8080/feed/posts?page=${page}`
+            `http://localhost:8080/feed/posts?page=${page}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           if (res.status !== 200) {
             throw new Error('Failed to fetch posts.');
@@ -84,7 +96,7 @@ const Feed: React.FC = () => {
 
       fetchPosts();
     },
-    [postPage]
+    [postPage, token]
   );
 
   useEffect(() => {
@@ -92,7 +104,7 @@ const Feed: React.FC = () => {
     loadPosts();
   }, [loadPosts]);
 
-  const statusUpdateHandler = (event: React.FormEvent) => {
+  const statusUpdateHandler = (event: FormEvent) => {
     event.preventDefault();
     console.log('Updating status...');
   };
@@ -143,6 +155,9 @@ const Feed: React.FC = () => {
       const res = await fetch(url, {
         method: method,
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (res.status !== 200 && res.status !== 201) {
@@ -180,7 +195,7 @@ const Feed: React.FC = () => {
     fetch(`http:localhost:8080/feed/post/${postId}`, {
       method: 'DELETE',
       headers: {
-        Authorization: 'Bearer TOKEN', // Replace 'TOKEN' with your actual token
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => {
