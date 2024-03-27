@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import FeedPage from './pages/Feed/Feed';
@@ -16,7 +16,6 @@ const BASE_URL: string = 'http://localhost:8080/auth/';
 const App: React.FC = () => {
   const navigate = useNavigate();
   const { isAuth, login, authLoading, signup } = useAuth();
-  const [error, setError] = useState<Error | null>(null);
 
   const loginHandler = (e: FormEvent, authData: AuthData) => {
     e.preventDefault();
@@ -25,16 +24,11 @@ const App: React.FC = () => {
 
   const signupHandler = async (e: FormEvent, authData: SignupForm) => {
     e.preventDefault();
-    try {
-      const success = await signup(`${BASE_URL}signup`, authData);
-      if (success) {
-        navigate('/login');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Signup failed'));
+    const success = await signup(`${BASE_URL}signup`, authData);
+    if (success) {
+      navigate('/login');
     }
   };
-  const clearError = () => setError(null);
   return (
     <>
       <Routes>
@@ -50,12 +44,7 @@ const App: React.FC = () => {
               <Route
                 path='/signup'
                 element={
-                  <SignupPage
-                    onSignup={signupHandler}
-                    loading={authLoading}
-                    error={error}
-                    onClearError={clearError}
-                  />
+                  <SignupPage onSignup={signupHandler} loading={authLoading} />
                 }
               />
               <Route path='*' element={<Navigate to='/' replace />} />

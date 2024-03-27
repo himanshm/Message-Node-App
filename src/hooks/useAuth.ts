@@ -93,7 +93,9 @@ export const useAuth = () => {
       }
     } catch (err) {
       setError(
-        new Error(err instanceof Error ? err.message : 'An error occurred')
+        new Error(
+          err instanceof Error ? err.message : 'An error occurred during login'
+        )
       );
     } finally {
       setAuthLoading(false);
